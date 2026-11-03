@@ -1,0 +1,43 @@
+/* ===== Navbar — mirrors minutex.ai header ===== */
+.mx-nav { position: fixed; inset: 0 0 auto; z-index: 50; pointer-events: none; }
+.mx-nav__bar {
+  pointer-events: auto;
+  width: min(100% - 1.5rem, 72rem);
+  margin: 12px auto 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 10px 16px; border-radius: 999px;
+  background: transparent;
+  transition: background-color .3s ease, box-shadow .3s ease, backdrop-filter .3s ease;
+}
+@media (min-width: 640px) { .mx-nav__bar { padding: 10px 20px; } }
+.mx-nav__bar.is-scrolled {
+  background: rgba(255, 255, 255, .8);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+
+.mx-nav__logo { display: inline-flex; flex: none; }
+.mx-nav__logo img { display: block; height: 28px; width: auto; }
+
+.mx-nav__center { flex: 1; display: flex; justify-content: center; min-width: 0; }
+
+.mx-nav__secure {
+  flex: none; display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 16px 0 6px; border-radius: 999px;
+  background: rgba(255, 255, 255, .7); border: 1px solid rgba(255, 255, 255, .6);
+  font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.mx-nav__bar.is-scrolled .mx-nav__secure { background: var(--brand-50); border-color: var(--brand-100); }
+.mx-nav__secure-icon {
+  width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--brand); color: #fff; box-shadow: 0 6px 14px -6px rgba(46, 108, 246, .7);
+}
+
+@media (max-width: 639px) {
+  .mx-nav__logo img { height: 24px; }
+  .mx-nav__bar { gap: 10px; }
+  .mx-nav__secure { height: 40px; padding: 0 12px 0 4px; font-size: 13px; }
+  .has-center .mx-nav__secure { padding: 0 4px; }
+  .has-center .mx-nav__secure-text { display: none; }
+}
