@@ -1,26 +1,22 @@
 import { useEffect, useState } from 'react'
-import { RAW_PLANS, isPaid } from '../data/plans'
-import * as api from '../lib/checkoutApi'
+import { RAW_PLANS } from '../data/plans'
 import { navigate } from '../lib/router'
 import PlanStep from '../components/checkout/PlanStep'
 import OrderSummary from '../components/checkout/OrderSummary'
-import AccountStep from '../components/checkout/AccountStep'
-import PaymentStep from '../components/checkout/PaymentStep'
+import CheckoutForm from '../components/checkout/CheckoutForm'
 import SuccessStep from '../components/checkout/SuccessStep'
-import { ArrowLeft, Shield } from '../components/Icons'
 import Navbar from '../components/Navbar'
+import { ArrowLeft, Shield } from '../components/Icons'
 import '../components/checkout/Checkout.css'
 
 /**
- * Full-page checkout. Mirrors minutex.ai/pricing → apps.minutex.ai/checkout:
- *   plan (type + billing + plan card) → email → payment → success
- * Free plans skip payment. Accepts the same query string as the real app:
+ * Full-page checkout:  plan → checkout (email + card + Pay/Login) → success.
+ * Accepts the same query string as apps.minutex.ai/checkout:
  *   /checkout?plan=Pro&billing=yearly&type=personal
  */
 const STEPS = [
   { key: 'plan', label: 'Plan' },
-  { key: 'account', label: 'Email' },
-  { key: 'payment', label: 'Payment' },
+  { key: 'checkout', label: 'Checkout' },
 ]
 
 function readQuery() {
@@ -33,20 +29,14 @@ function readQuery() {
 
 export default function CheckoutPage() {
   const [initial] = useState(readQuery)
-  const [step, setStep] = useState(initial.plan ? 'account' : 'plan')
+  const [step, setStep] = useState(initial.plan ? 'checkout' : 'plan')
   const [type, setType] = useState(initial.type)
   const [yearly, setYearly] = useState(initial.yearly)
   const [planId, setPlanId] = useState(initial.plan?.id ?? RAW_PLANS[1].id)
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [receipt, setReceipt] = useState(null)
+  const [result, setResult] = useState(null) // { email, receipt, accountCreated }
 
   const plan = RAW_PLANS.find((p) => p.id === planId) ?? RAW_PLANS[1]
-  const paid = isPaid(plan)
-  const isCompany = plan.plan_type === 'company'
-  const steps = paid ? STEPS : STEPS.filter((s) => s.key !== 'payment')
-  const stepIndex = step === 'success' ? steps.length : steps.findIndex((s) => s.key === step)
+  const stepIndex = step === 'success' ? STEPS.length : STEPS.findIndex((s) => s.key === step)
 
   useEffect(() => { document.title = 'Checkout · MinuteX' }, [])
   useEffect(() => { window.scrollTo({ top: 0 }) }, [step])
@@ -59,34 +49,12 @@ export default function CheckoutPage() {
     navigate(`/checkout?${q}`, { replace: true })
   }, [step, yearly, type, plan.name, plan.plan_type])
 
-  const run = async (fn) => {
-    setLoading(true); setError('')
-    try { await fn() } catch (err) { setError(err.message || 'Something went wrong. Please try again.') } finally { setLoading(false) }
-  }
-  const go = (key) => { setError(''); setStep(key) }
-
-  const handleSelectPlan = (p) => { setPlanId(p.id); go('account') }
-
-  const handleAccount = () => run(async () => {
-    await api.register({ email: email.trim(), account_type: isCompany ? 'company' : 'personal', language: 'en' })
-    go(paid ? 'payment' : 'success')
-  })
-
-  const handlePay = (card) => run(async () => {
-    const res = await api.subscribe({ plan_id: plan.id, period: yearly ? 'yearly' : 'monthly', card })
-    setReceipt(res)
-    go('success')
-  })
-
-  const back = () => go(step === 'payment' ? 'account' : 'plan')
-  const inCheckout = step === 'account' || step === 'payment'
-
   return (
     <div className="mxc-page">
       <Navbar>
         {step !== 'success' && (
           <ol className="mxc-stepper" aria-label="Checkout progress">
-            {steps.map((s, i) => (
+            {STEPS.map((s, i) => (
               <li key={s.key} className={i < stepIndex ? 'is-done' : i === stepIndex ? 'is-current' : ''} aria-current={i === stepIndex ? 'step' : undefined}>
                 <span>{i + 1}</span>{s.label}
               </li>
@@ -97,33 +65,29 @@ export default function CheckoutPage() {
 
       <main className={`mxc-main mxc-main--${step}`} key={step}>
         {step === 'plan' && (
-          <PlanStep type={type} setType={setType} yearly={yearly} setYearly={setYearly} onSelect={handleSelectPlan} />
+          <PlanStep type={type} setType={setType} yearly={yearly} setYearly={setYearly}
+            onSelect={(p) => { setPlanId(p.id); setStep('checkout') }} />
         )}
 
-        {inCheckout && (
+        {step === 'checkout' && (
           <>
             <div className="mxc-checkout-head">
-              <button type="button" className="mxc-back" onClick={back} disabled={loading}><ArrowLeft size={16} /> Back</button>
+              <button type="button" className="mxc-back" onClick={() => setStep('plan')}><ArrowLeft size={16} /> Back</button>
               <h1 className="mxc-h1 mxc-h1--brand">Subscribe to MinuteX {plan.name}</h1>
             </div>
             <div className="mxc-grid">
-              <OrderSummary plan={plan} yearly={yearly} setYearly={setYearly} locked={loading} />
+              <OrderSummary plan={plan} yearly={yearly} setYearly={setYearly} />
               <div className="mxc-grid__main">
-                {step === 'account' && (
-                  <AccountStep email={email} setEmail={setEmail} isCompany={isCompany} paid={paid}
-                    onSubmit={handleAccount} loading={loading} serverError={error} clearServerError={() => setError('')} />
-                )}
-                {step === 'payment' && (
-                  <PaymentStep plan={plan} yearly={yearly} email={email.trim()} onPay={handlePay}
-                    onChangeEmail={() => go('account')} loading={loading} serverError={error} />
-                )}
+                <CheckoutForm plan={plan} yearly={yearly} onComplete={(r) => { setResult(r); setStep('success') }} />
               </div>
             </div>
             <p className="mxc-secure"><Shield size={14} /> Encrypted in transit and at rest · Cancel anytime</p>
           </>
         )}
 
-        {step === 'success' && <SuccessStep plan={plan} yearly={yearly} email={email.trim()} receipt={receipt} />}
+        {step === 'success' && result && (
+          <SuccessStep plan={plan} yearly={yearly} email={result.email} receipt={result.receipt} accountCreated={result.accountCreated} />
+        )}
       </main>
     </div>
   )

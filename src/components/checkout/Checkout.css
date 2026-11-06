@@ -219,10 +219,7 @@ select.mxc-input { appearance: none; padding-right: 36px; background: #fff url("
   transition: background .2s, color .2s;
 }
 .mxc-brand.is-on { background: var(--ink); color: #fff; }
-.mxc-split { display: grid; gap: 14px; grid-template-columns: 1fr; }
-.mxc-split:has(> :nth-child(2)) { grid-template-columns: 1.6fr 1fr; }
 
-.mxc-recap { margin-top: 18px; padding: 14px 16px; border-radius: 16px; background: #f6f9fe; border: 1px solid #edf1f7; display: grid; gap: 8px; }
 
 /* OTP */
 .mxc-bigicon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 14px; border-radius: 16px; background: var(--brand-50); color: var(--brand); }
@@ -262,3 +259,26 @@ select.mxc-input { appearance: none; padding-right: 36px; background: #fff url("
 .mxc-info__icon { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: #fff; color: var(--brand); }
 .mxc-info--center { margin-top: 20px; }
 .mxc-field__hint .mxc-link { font-size: 12px; }
+
+/* email status (spinner / check) inside the input */
+.mxc-input-status { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); display: grid; place-items: center; color: #10b981; pointer-events: none; }
+.mxc-spinner--brand { border-color: rgba(46, 108, 246, .2); border-top-color: var(--brand); }
+
+/* card form — mounts after the email check with a slide-open animation */
+.mxc-reveal { display: grid; gap: 10px; overflow: hidden; animation: mxc-open .45s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes mxc-open { from { opacity: 0; max-height: 0; transform: translateY(-6px); } to { opacity: 1; max-height: 260px; transform: none; } }
+.mxc-cardnote { margin: 0; font-size: 12.5px; color: var(--ink-muted); }
+
+/* login offer — email registered & already subscribed */
+.mxc-offer {
+  display: flex; gap: 14px; padding: 16px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--brand-50), #fff); border: 1.5px solid var(--brand-100);
+  animation: mxc-step .35s ease both;
+}
+.mxc-offer__icon { flex: none; width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--brand); color: #fff; box-shadow: 0 8px 18px -8px rgba(46, 108, 246, .7); }
+.mxc-offer__title { margin: 0; font-size: 15px; font-weight: 800; color: var(--ink); }
+.mxc-offer__text { margin: 4px 0 8px; font-size: 13px; line-height: 1.55; color: #34425c; }
+.mxc-offer__text strong { color: var(--ink); overflow-wrap: anywhere; }
+a.mxc-submit { text-decoration: none; }
+
+@media (prefers-reduced-motion: reduce) { .mxc-reveal { animation: none; } }

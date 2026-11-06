@@ -34,7 +34,7 @@ export function luhn(num) {
   return n.length >= 13 && sum % 10 === 0
 }
 
-export function validateCard({ number, expiry, cvc, name }) {
+export function validateCard({ number, expiry, cvc }) {
   const errors = {}
   const n = digits(number)
   const brand = cardBrand(n)
@@ -49,6 +49,5 @@ export function validateCard({ number, expiry, cvc, name }) {
   }
 
   if (digits(cvc).length < (brand === 'amex' ? 4 : 3)) errors.cvc = "Your card's security code is incomplete."
-  if (!name.trim()) errors.name = 'Name on card is required.'
   return errors
 }
